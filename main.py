@@ -10,12 +10,19 @@ import sys
 from pathlib import Path
 
 
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
 def main():
     here = Path(__file__).resolve().parent
     src = here / "entry.png"
     if not src.is_file():
         print("entry.png missing", file=sys.stderr)
         sys.exit(1)
+    with open(src, "rb") as f:
+        if f.read(len(PNG_MAGIC)) != PNG_MAGIC:
+            print("entry.png is not a PNG", file=sys.stderr)
+            sys.exit(1)
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
     dst = Path(out_dir) / "entry.png"
@@ -23,6 +30,10 @@ def main():
     if dst.stat().st_size != src.stat().st_size:
         print("size mismatch after copy", file=sys.stderr)
         sys.exit(1)
+    with open(dst, "rb") as f:
+        if f.read(len(PNG_MAGIC)) != PNG_MAGIC:
+            print("copied file is not a PNG", file=sys.stderr)
+            sys.exit(1)
     print(f"copied entry.png ({src.stat().st_size} bytes) to {dst}")
 
 
